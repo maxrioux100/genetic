@@ -1,0 +1,30 @@
+{
+  "name": "genetic",
+  "version": "0.1.0",
+  "description": "Evolve from a single cell: a browser game with a mutation tree and threats that adapt to how you play",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/maxrioux100/genetic.git"
+  },
+  "homepage": "https://maxrioux100.github.io/genetic/",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "npx --yes serve -l 8000 .",
+    "test": "node --test",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run lint && npm run format:check && npm test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.9"
+  }
+}

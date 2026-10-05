@@ -43,14 +43,30 @@ export class Player {
     this.energy = this.maxEnergy;
   }
 
-  has(id) { return this.talents.has(id); }
-  get radius() { return CFG.player.baseRadius + this.level * CFG.player.radiusPerLevel; }
-  get r() { return this.radius; }
-  get eatRatio() { return this.has('engulf') ? 1.3 : CFG.player.eatRatio; }
-  get canDash() { return (this.has('cilia') || this.has('streamline')) && !this.has('reef'); }
-  get speedFrac() { return Math.hypot(this.vx, this.vy) / this.maxSpeed; }
-  get stealthed() { return this.has('camo') && this.speedFrac < 0.4 && !this.anchored; }
-  get invulnerable() { return this.cystT > 0; }
+  has(id) {
+    return this.talents.has(id);
+  }
+  get radius() {
+    return CFG.player.baseRadius + this.level * CFG.player.radiusPerLevel;
+  }
+  get r() {
+    return this.radius;
+  }
+  get eatRatio() {
+    return this.has('engulf') ? 1.3 : CFG.player.eatRatio;
+  }
+  get canDash() {
+    return (this.has('cilia') || this.has('streamline')) && !this.has('reef');
+  }
+  get speedFrac() {
+    return Math.hypot(this.vx, this.vy) / this.maxSpeed;
+  }
+  get stealthed() {
+    return this.has('camo') && this.speedFrac < 0.4 && !this.anchored;
+  }
+  get invulnerable() {
+    return this.cystT > 0;
+  }
   get maxDrones() {
     if (!this.has('mitosis')) return 0;
     let n = 1;
@@ -62,7 +78,11 @@ export class Player {
 
   recompute() {
     const P = CFG.player;
-    let maxHp = P.maxHp, maxEnergy = P.maxEnergy, speed = P.baseSpeed, dmgTaken = 1, metab = 1;
+    let maxHp = P.maxHp,
+      maxEnergy = P.maxEnergy,
+      speed = P.baseSpeed,
+      dmgTaken = 1,
+      metab = 1;
     if (this.has('membrane')) maxHp += 40;
     if (this.has('juggernaut')) maxHp += 100;
     if (this.has('phantom')) maxHp *= 0.7;
@@ -100,7 +120,11 @@ export class Player {
     for (const p of this.parasites) p.detach(true);
     this.parasites = [];
     // escape holds
-    if (this.holder) { this.holder.release?.(this); this.holder = null; this.heldT = 0; }
+    if (this.holder) {
+      this.holder.release?.(this);
+      this.holder = null;
+      this.heldT = 0;
+    }
     if (this.has('phantom')) this.decoy = { x: this.x, y: this.y, t: 3, r: this.r };
     this.world.audio.play('dash');
     return true;
@@ -122,7 +146,11 @@ export class Player {
     this.cystCd = CFG.player.cystCd;
     for (const p of this.parasites) p.detach(true);
     this.parasites = [];
-    if (this.holder) { this.holder.release?.(this); this.holder = null; this.heldT = 0; }
+    if (this.holder) {
+      this.holder.release?.(this);
+      this.holder = null;
+      this.heldT = 0;
+    }
     this.poison = 0;
     this.world.audio.play('cyst');
     return true;
@@ -142,7 +170,8 @@ export class Player {
       this.world.burst(d.x, d.y, '#c87cff', 18);
       this.world.toast('A drone gave itself for you');
       const ang = source ? Math.atan2(this.y - source.y, this.x - source.x) : rand(TAU);
-      this.vx = Math.cos(ang) * 700; this.vy = Math.sin(ang) * 700;
+      this.vx = Math.cos(ang) * 700;
+      this.vy = Math.sin(ang) * 700;
       this.world.audio.play('sacrifice');
       return 0;
     }
@@ -154,7 +183,8 @@ export class Player {
     if (!opts.silent) this.world.shake(Math.min(10, a * 0.4));
     if (this.has('juggernaut') && source && source.vx !== undefined && opts.kind !== 'poison') {
       const ang = Math.atan2(source.y - this.y, source.x - this.x);
-      source.vx += Math.cos(ang) * 500; source.vy += Math.sin(ang) * 500;
+      source.vx += Math.cos(ang) * 500;
+      source.vy += Math.sin(ang) * 500;
       source.stunT = Math.max(source.stunT || 0, 0.6);
     }
     if (this.hp <= 0) this.die();
@@ -165,7 +195,9 @@ export class Player {
     if (this.dead) return;
     if (this.has('hive') && this.drones.length > 0) {
       const d = this.drones.shift();
-      this.x = d.x; this.y = d.y; d.dead = true;
+      this.x = d.x;
+      this.y = d.y;
+      d.dead = true;
       this.hp = this.maxHp * 0.5;
       this.energy = Math.max(this.energy, 40);
       this.cystT = 1.0; // moment of grace
@@ -190,7 +222,10 @@ export class Player {
     this.biomass += c.foodBiomass;
     this.energy = Math.min(this.maxEnergy, this.energy + c.foodEnergy);
     this.stats.eaten++;
-    if (this.has('bloodlust')) { this.hp = Math.min(this.maxHp, this.hp + 25); this.bloodlustT = 2.5; }
+    if (this.has('bloodlust')) {
+      this.hp = Math.min(this.maxHp, this.hp + 25);
+      this.bloodlustT = 2.5;
+    }
     this.world.burst(c.x, c.y, c.color, 20);
     this.world.audio.play('eatCell');
   }
@@ -212,11 +247,13 @@ export class Player {
     if (this.anchored) this.anchorT = Math.min(1, this.anchorT + dt * 1.5);
 
     // movement
-    let desiredX = 0, desiredY = 0;
+    let desiredX = 0,
+      desiredY = 0;
     const immobile = this.cystT > 0 || this.anchored || this.heldT > 0;
     if (!immobile) {
       const dir = input.moveDir(this);
-      desiredX = dir.x; desiredY = dir.y;
+      desiredX = dir.x;
+      desiredY = dir.y;
     }
     let speed = this.maxSpeed;
     if (this.bloodlustT > 0) speed *= 1.6;
@@ -225,7 +262,8 @@ export class Player {
     if (this.dashT > 0) {
       this.dashT -= dt;
       const ang = this.heading;
-      this.vx = Math.cos(ang) * P.dashSpeed; this.vy = Math.sin(ang) * P.dashSpeed;
+      this.vx = Math.cos(ang) * P.dashSpeed;
+      this.vy = Math.sin(ang) * P.dashSpeed;
     } else {
       this.vx = approach(this.vx, desiredX * speed, P.accel, dt);
       this.vy = approach(this.vy, desiredY * speed, P.accel, dt);
@@ -233,17 +271,34 @@ export class Player {
     }
     if (this.heldT > 0) {
       this.heldT -= dt;
-      if (this.holder) { this.x = approach(this.x, this.holder.x, 6, dt); this.y = approach(this.y, this.holder.y, 6, dt); }
-      this.vx = 0; this.vy = 0;
+      if (this.holder) {
+        this.x = approach(this.x, this.holder.x, 6, dt);
+        this.y = approach(this.y, this.holder.y, 6, dt);
+      }
+      this.vx = 0;
+      this.vy = 0;
       if (this.heldT <= 0) this.holder = null;
     }
-    this.x += this.vx * dt; this.y += this.vy * dt;
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
     // soft walls
     const m = this.r;
-    if (this.x < m) { this.x = m; this.vx = Math.abs(this.vx) * 0.5; }
-    if (this.y < m) { this.y = m; this.vy = Math.abs(this.vy) * 0.5; }
-    if (this.x > CFG.world.w - m) { this.x = CFG.world.w - m; this.vx = -Math.abs(this.vx) * 0.5; }
-    if (this.y > CFG.world.h - m) { this.y = CFG.world.h - m; this.vy = -Math.abs(this.vy) * 0.5; }
+    if (this.x < m) {
+      this.x = m;
+      this.vx = Math.abs(this.vx) * 0.5;
+    }
+    if (this.y < m) {
+      this.y = m;
+      this.vy = Math.abs(this.vy) * 0.5;
+    }
+    if (this.x > CFG.world.w - m) {
+      this.x = CFG.world.w - m;
+      this.vx = -Math.abs(this.vx) * 0.5;
+    }
+    if (this.y > CFG.world.h - m) {
+      this.y = CFG.world.h - m;
+      this.vy = -Math.abs(this.vy) * 0.5;
+    }
 
     // metabolism
     const sf = this.speedFrac;
@@ -253,7 +308,7 @@ export class Player {
     if (this.cystT > 0) drain *= 0.5;
     this.energy -= drain * dt;
     // parasites
-    for (const p of this.parasites) this.energy -= 5 * dt;
+    this.energy -= 5 * this.parasites.length * dt;
     // light
     const light = W.lightAt(this.x, this.y);
     if (light > 0 && this.has('chloroplast')) {
@@ -268,7 +323,10 @@ export class Player {
     if (this.energy > this.maxEnergy * 0.6) this.hp = Math.min(this.maxHp, this.hp + P.hpRegenCostless * dt);
     if (this.has('regen') && this.energy > this.maxEnergy * 0.5) this.hp = Math.min(this.maxHp, this.hp + 3 * dt);
     // poison
-    if (this.poison > 0) { this.poison -= dt; this.damage(4 * dt, null, { kind: 'poison', silent: true }); }
+    if (this.poison > 0) {
+      this.poison -= dt;
+      this.damage(4 * dt, null, { kind: 'poison', silent: true });
+    }
 
     // bloom
     if (this.has('bloom')) {
@@ -287,12 +345,16 @@ export class Player {
       if (!this.stealthed && this.cystT <= 0) this.scent.push({ x: this.x, y: this.y, t: P.scentLife });
     }
     for (let i = this.scent.length - 1; i >= 0; i--) if ((this.scent[i].t -= dt) <= 0) this.scent.splice(i, 1);
-    if (sf < 0.15) this.stillT += dt; else this.stillT = 0;
+    if (sf < 0.15) this.stillT += dt;
+    else this.stillT = 0;
 
     // hive replication
     if (this.has('hive')) {
       this.hiveT += dt;
-      if (this.hiveT >= 25 && this.drones.length < this.maxDrones) { this.hiveT = 0; this.spawnDrone(); }
+      if (this.hiveT >= 25 && this.drones.length < this.maxDrones) {
+        this.hiveT = 0;
+        this.spawnDrone();
+      }
     }
 
     // division
@@ -326,7 +388,8 @@ export class Drone {
     const a = rand(TAU);
     this.x = owner.x + Math.cos(a) * 40;
     this.y = owner.y + Math.sin(a) * 40;
-    this.vx = 0; this.vy = 0;
+    this.vx = 0;
+    this.vy = 0;
     this.orbit = a;
     this.maxHp = 30 + owner.level * 2;
     this.hp = this.maxHp;
@@ -335,23 +398,36 @@ export class Drone {
     this.color = '#c87cff';
     this.isDrone = true;
   }
-  get r() { return 6 + this.owner.level * 0.7; }
+  get r() {
+    return 6 + this.owner.level * 0.7;
+  }
   damage(a) {
     this.hp -= a;
-    if (this.hp <= 0) { this.dead = true; this.world.burst(this.x, this.y, this.color, 14); }
+    if (this.hp <= 0) {
+      this.dead = true;
+      this.world.burst(this.x, this.y, this.color, 14);
+    }
   }
   update(dt) {
-    const o = this.owner, W = this.world;
+    const o = this.owner,
+      W = this.world;
     if (o.has('symbiosis')) this.hp = Math.min(this.maxHp, this.hp + 2 * dt);
     this.orbit += dt * 0.9;
-    let tx, ty, speed = o.maxSpeed * 1.15;
+    let tx,
+      ty,
+      speed = o.maxSpeed * 1.15;
     const nut = W.nearestNutrient(this.x, this.y, 170);
     const threat = o.has('swarm') ? W.nearestThreat(o.x, o.y, 160, (t) => t.hp !== undefined && !t.boss) : null;
-    if (threat) { tx = threat.x; ty = threat.y; }
-    else if (nut) { tx = nut.x; ty = nut.y; }
-    else {
+    if (threat) {
+      tx = threat.x;
+      ty = threat.y;
+    } else if (nut) {
+      tx = nut.x;
+      ty = nut.y;
+    } else {
       const od = o.r + 26;
-      tx = o.x + Math.cos(this.orbit) * od; ty = o.y + Math.sin(this.orbit) * od;
+      tx = o.x + Math.cos(this.orbit) * od;
+      ty = o.y + Math.sin(this.orbit) * od;
     }
     const d = Math.hypot(tx - this.x, ty - this.y);
     if (d > 2) {
@@ -359,7 +435,8 @@ export class Drone {
       this.vx = approach(this.vx, ((tx - this.x) / d) * speed * f, 8, dt);
       this.vy = approach(this.vy, ((ty - this.y) / d) * speed * f, 8, dt);
     }
-    this.x += this.vx * dt; this.y += this.vy * dt;
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
     if (nut && dist(this, nut) < this.r + nut.r) {
       W.removeNutrient(nut);
       o.biomass += nut.biomass * 0.7;

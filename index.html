@@ -1,71 +1,87 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-  <title>Genetic — evolve from a single cell</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <canvas id="game"></canvas>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <title>Genetic — evolve from a single cell</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <canvas id="game"></canvas>
 
-  <!-- HUD -->
-  <div id="hud" class="hidden">
-    <div class="bars">
-      <div class="bar"><span class="lbl">Integrity</span><div class="track"><div id="hp" class="fill hp"></div></div></div>
-      <div class="bar"><span class="lbl">Energy</span><div class="track"><div id="energy" class="fill energy"></div></div></div>
-      <div class="bar"><span class="lbl">Biomass</span><div class="track"><div id="biomass" class="fill biomass"></div></div></div>
+    <!-- HUD -->
+    <div id="hud" class="hidden">
+      <div class="bars">
+        <div class="bar">
+          <span class="lbl">Integrity</span>
+          <div class="track"><div id="hp" class="fill hp"></div></div>
+        </div>
+        <div class="bar">
+          <span class="lbl">Energy</span>
+          <div class="track"><div id="energy" class="fill energy"></div></div>
+        </div>
+        <div class="bar">
+          <span class="lbl">Biomass</span>
+          <div class="track"><div id="biomass" class="fill biomass"></div></div>
+        </div>
+      </div>
+      <div class="status">
+        <div id="era" class="era"></div>
+        <div id="level"></div>
+        <div id="mp" class="mp"></div>
+      </div>
+      <div id="abilities" class="abilities"></div>
+      <div id="toasts"></div>
+      <div id="banner" class="banner hidden"></div>
+      <div id="hint" class="hint"></div>
     </div>
-    <div class="status">
-      <div id="era" class="era"></div>
-      <div id="level"></div>
-      <div id="mp" class="mp"></div>
+
+    <!-- Talent tree -->
+    <div id="tree" class="overlay hidden">
+      <div class="tree-head">
+        <h2>Mutation</h2>
+        <div id="tree-mp"></div>
+        <div class="tree-help">
+          Pick a way of life. Points are scarce: you will not get everything. Click a node to mutate. <b>T</b> or <b>Esc</b> to return.
+        </div>
+        <button id="tree-close" class="btn btn-small">Return to the soup</button>
+      </div>
+      <div id="tree-canvas">
+        <svg id="tree-lines"></svg>
+        <div id="tree-nodes"></div>
+      </div>
+      <div id="tooltip" class="tooltip hidden"></div>
     </div>
-    <div id="abilities" class="abilities"></div>
-    <div id="toasts"></div>
-    <div id="banner" class="banner hidden"></div>
-    <div id="hint" class="hint"></div>
-  </div>
 
-  <!-- Talent tree -->
-  <div id="tree" class="overlay hidden">
-    <div class="tree-head">
-      <h2>Mutation</h2>
-      <div id="tree-mp"></div>
-      <div class="tree-help">Pick a way of life. Points are scarce: you will not get everything. Click a node to mutate. <b>T</b> or <b>Esc</b> to return.</div>
-      <button id="tree-close" class="btn btn-small">Return to the soup</button>
+    <!-- Menu -->
+    <div id="menu" class="overlay screen">
+      <h1>GENETIC</h1>
+      <p class="tag">You are one cell in a hostile soup. Eat, divide, mutate, and become something.</p>
+      <div class="controls">
+        <div><b>Move</b> mouse (cell follows cursor) or WASD</div>
+        <div><b>Burst</b> Space / click &nbsp;·&nbsp; <b>Anchor</b> E &nbsp;·&nbsp; <b>Cyst</b> Q</div>
+        <div><b>Mutation tree</b> T &nbsp;·&nbsp; <b>Pause</b> P &nbsp;·&nbsp; <b>Mute</b> M</div>
+      </div>
+      <p class="small">
+        Every threat has a tell and a counter. Every talent branch is a way to live. The world watches how you play and pushes back on it.
+      </p>
+      <button id="start" class="btn">Begin as a cell</button>
     </div>
-    <div id="tree-canvas">
-      <svg id="tree-lines"></svg>
-      <div id="tree-nodes"></div>
+
+    <!-- End -->
+    <div id="end" class="overlay screen hidden">
+      <h1 id="end-title"></h1>
+      <p id="end-sub" class="tag"></p>
+      <div id="end-lineage" class="lineage"></div>
+      <div id="end-stats" class="stats"></div>
+      <button id="restart" class="btn">Try another lineage</button>
     </div>
-    <div id="tooltip" class="tooltip hidden"></div>
-  </div>
 
-  <!-- Menu -->
-  <div id="menu" class="overlay screen">
-    <h1>GENETIC</h1>
-    <p class="tag">You are one cell in a hostile soup. Eat, divide, mutate, and become something.</p>
-    <div class="controls">
-      <div><b>Move</b> mouse (cell follows cursor) or WASD</div>
-      <div><b>Burst</b> Space / click &nbsp;·&nbsp; <b>Anchor</b> E &nbsp;·&nbsp; <b>Cyst</b> Q</div>
-      <div><b>Mutation tree</b> T &nbsp;·&nbsp; <b>Pause</b> P &nbsp;·&nbsp; <b>Mute</b> M</div>
+    <div id="pause" class="overlay screen hidden">
+      <h1>Paused</h1>
+      <p class="tag">P to resume</p>
     </div>
-    <p class="small">Every threat has a tell and a counter. Every talent branch is a way to live. The world watches how you play and pushes back on it.</p>
-    <button id="start" class="btn">Begin as a cell</button>
-  </div>
 
-  <!-- End -->
-  <div id="end" class="overlay screen hidden">
-    <h1 id="end-title"></h1>
-    <p id="end-sub" class="tag"></p>
-    <div id="end-lineage" class="lineage"></div>
-    <div id="end-stats" class="stats"></div>
-    <button id="restart" class="btn">Try another lineage</button>
-  </div>
-
-  <div id="pause" class="overlay screen hidden"><h1>Paused</h1><p class="tag">P to resume</p></div>
-
-  <script type="module" src="src/main.js"></script>
-</body>
+    <script type="module" src="src/main.js"></script>
+  </body>
 </html>

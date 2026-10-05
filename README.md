@@ -2,13 +2,24 @@
 
 A browser game about becoming something. You start as a single cell in a hostile soup. You eat, you divide, you mutate, and the world adapts to the way you choose to live.
 
-**Play:** open `index.html` through any static server (modules need http), or the GitHub Pages build.
+**Play:** https://maxrioux100.github.io/genetic/ (deployed from `main` by GitHub Actions), or locally:
 
 ```sh
-npx serve .        # or: python3 -m http.server 8000
+npm start          # serves the game at http://localhost:8000
 ```
 
-No build step, no dependencies. Plain ES modules and a canvas.
+The game is plain ES modules and a canvas: no build step, no runtime dependencies. Dev dependencies are only for linting, formatting and tests.
+
+## Development
+
+```sh
+npm install
+npm run check      # lint + format check + tests, same as CI
+npm test           # headless simulation and talent-tree tests
+npm run format     # prettier
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow and the design rules every change is held to. Changes land through pull requests; `main` is protected and deploys to Pages on merge.
 
 ## The idea
 
@@ -21,35 +32,35 @@ Most evolution games make the talent tree a stat sheet and the threat a number t
 
 ## Controls
 
-| Action | Input |
-| --- | --- |
-| Move | Mouse (cell follows cursor, speed scales with distance) or WASD |
-| Cilia Burst | Space or left click |
-| Anchor | E or right click |
-| Cyst | Q |
-| Mutation tree | T |
-| Pause | P / Esc |
-| Mute | M |
+| Action        | Input                                                           |
+| ------------- | --------------------------------------------------------------- |
+| Move          | Mouse (cell follows cursor, speed scales with distance) or WASD |
+| Cilia Burst   | Space or left click                                             |
+| Anchor        | E or right click                                                |
+| Cyst          | Q                                                               |
+| Mutation tree | T                                                               |
+| Pause         | P / Esc                                                         |
+| Mute          | M                                                               |
 
 ## The five ways of life
 
-| Branch | Fantasy | Keystone |
-| --- | --- | --- |
-| Hunter | Eat other cells. Stop scavenging. | **Apex Predator**: anything you kill is food, even the macrophage. Packs come for you. |
-| Autotroph | Follow the light, root, grow. | **Living Reef**: anchored, you radiate light, bloom food and slow everything that passes. |
-| Armor | Shrug it off. | **Juggernaut**: immune to acid and poison, attackers are thrown back, slow as a rock. |
-| Nimble | Never be where they bite. | **Phantom**: bursts leave a decoy and phase through enemies. Fragile. |
-| Colony | Be many. | **Hive Mind**: drones replicate, and if you die your mind jumps into one. |
+| Branch    | Fantasy                           | Keystone                                                                                  |
+| --------- | --------------------------------- | ----------------------------------------------------------------------------------------- |
+| Hunter    | Eat other cells. Stop scavenging. | **Apex Predator**: anything you kill is food, even the macrophage. Packs come for you.    |
+| Autotroph | Follow the light, root, grow.     | **Living Reef**: anchored, you radiate light, bloom food and slow everything that passes. |
+| Armor     | Shrug it off.                     | **Juggernaut**: immune to acid and poison, attackers are thrown back, slow as a rock.     |
+| Nimble    | Never be where they bite.         | **Phantom**: bursts leave a decoy and phase through enemies. Fragile.                     |
+| Colony    | Be many.                          | **Hive Mind**: drones replicate, and if you die your mind jumps into one.                 |
 
 ## Eras
 
-| Era | Level | What arrives |
-| --- | --- | --- |
-| Primordial Soup | 0 | Acid, phage waves |
-| Competition | 3 | Grazers (eat your food, bully the small), amoebas (telegraphed lunge, engulf) |
-| Arms Race | 6 | Parasites (latch, drain), pack hunters (circle and take turns), shrinking light |
-| Immune Response | 9 | Antibodies (follow scent), the macrophage |
-| Cambrian Dawn | 12 | The Leviathan: phage bursts and long telegraphed lunges. Reach division 15 to win. |
+| Era             | Level | What arrives                                                                       |
+| --------------- | ----- | ---------------------------------------------------------------------------------- |
+| Primordial Soup | 0     | Acid, phage waves                                                                  |
+| Competition     | 3     | Grazers (eat your food, bully the small), amoebas (telegraphed lunge, engulf)      |
+| Arms Race       | 6     | Parasites (latch, drain), pack hunters (circle and take turns), shrinking light    |
+| Immune Response | 9     | Antibodies (follow scent), the macrophage                                          |
+| Cambrian Dawn   | 12    | The Leviathan: phage bursts and long telegraphed lunges. Reach division 15 to win. |
 
 ## Code map
 
