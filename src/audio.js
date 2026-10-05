@@ -139,6 +139,45 @@ export class Audio {
           this.tone({ f: 262 * Math.pow(2, s / 12), type: 'triangle', t: 0.6, g: g(0.12), delay: i * 0.1 }),
         );
         break;
+      case 'zap':
+        this.tone({ f: 1800, f2: 300, type: 'sawtooth', t: 0.12, g: g(0.1) });
+        this.noise({ t: 0.08, g: g(0.08), f: 3000 });
+        break;
+      case 'discharge':
+        this.noise({ t: 0.4, g: g(0.2), f: 2500 });
+        this.tone({ f: 200, f2: 40, type: 'sawtooth', t: 0.5, g: g(0.18) });
+        break;
+      case 'whip':
+        this.noise({ t: 0.2, g: g(0.14), f: 1500 });
+        this.tone({ f: 500, f2: 120, type: 'triangle', t: 0.2, g: g(0.1) });
+        break;
+      case 'explode':
+        this.noise({ t: 0.35, g: g(0.2), f: 700 });
+        this.tone({ f: 120, f2: 30, type: 'square', t: 0.35, g: g(0.14) });
+        break;
+      case 'spit':
+        this.tone({ f: 300, f2: 700, type: 'triangle', t: 0.15, g: g(0.08) });
+        break;
+      case 'poison':
+        this.noise({ t: 0.3, g: g(0.1), f: 500 });
+        this.tone({ f: 400, f2: 150, type: 'sine', t: 0.3, g: g(0.08) });
+        break;
+      case 'spawn':
+        this.tone({ f: 400, f2: 800, type: 'sine', t: 0.15, g: g(0.08) });
+        break;
+      case 'command':
+        [0, 5, 10].forEach((s, i) => this.tone({ f: 500 * Math.pow(2, s / 12), type: 'square', t: 0.08, g: g(0.06), delay: i * 0.05 }));
+        break;
+      case 'eatBig':
+        this.tone({ f: 220, f2: 60, type: 'square', t: 0.3, g: g(0.16) });
+        this.noise({ t: 0.25, g: g(0.14), f: 600 });
+        break;
+      case 'levelup':
+        [0, 4, 7, 12, 16].forEach((s, i) =>
+          this.tone({ f: 392 * Math.pow(2, s / 12), type: 'triangle', t: 0.35, g: g(0.14), delay: i * 0.06 }),
+        );
+        this.noise({ t: 0.3, g: g(0.08), f: 2000 });
+        break;
       case 'buy':
         this.tone({ f: 660, f2: 990, t: 0.12, g: g(0.1) });
         break;

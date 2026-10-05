@@ -3,7 +3,7 @@ import { Camera, Renderer } from './render.js';
 import { Input } from './input.js';
 import { Audio } from './audio.js';
 import { UI } from './ui.js';
-import { canBuy, TALENT_BY_ID } from './talents.js';
+import { drawCards } from './perks.js';
 
 class Game {
   constructor() {
@@ -17,6 +17,7 @@ class Game {
     this.ui = new UI(this);
     this.state = 'menu';
     this.world = null;
+    this.cards = [];
     this.last = performance.now();
     this.resize();
     window.addEventListener('resize', () => this.resize());
@@ -37,15 +38,8 @@ class Game {
     this.world = new World(this.audio);
     this.cam.x = this.world.player.x;
     this.cam.y = this.world.player.y;
-    this.endT = 0;
+    this.cam.zoom = 1.15;
     this.setState('play');
-    // first mutation is free: open the tree right away so the player picks a way of life
-    setTimeout(() => {
-      if (this.state === 'play') {
-        this.world.toast('Choose your first mutation', 4);
-        this.setState('tree');
-      }
-    }, 1500);
   }
 
   setState(s) {
@@ -53,39 +47,45 @@ class Game {
     this.ui.show(s === 'play' ? 'none' : s);
   }
 
-  /** Called by the tree's close button and backdrop. */
-  closeTree() {
-    if (this.state === 'tree') this.setState('play');
-  }
-
-  buy(id) {
+  openLevelUp() {
     const p = this.world.player;
-    if (!canBuy(id, p.talents, p.mp)) {
-      this.audio.play('nope');
+    this.cards = drawCards(p.perks, p.perkCounts, 3);
+    if (!this.cards.length) {
+      this.world.pendingLevelUp = false;
       return;
     }
-    p.mp -= TALENT_BY_ID[id].cost;
-    p.learn(id);
+    this.ui.showCards(this.cards, p.level);
+    this.setState('levelup');
+  }
+
+  choose(i) {
+    const c = this.cards[i];
+    if (!c || this.state !== 'levelup') return;
+    const p = this.world.player;
+    p.takePerk(c.id);
+    this.world.pendingLevelUp = false;
+    this.world.toast(`${c.name}`, 2.5, 'perk');
+    this.world.fx.ring(p.x, p.y, '#ffffff', p.r, 200, 0.4, 4);
     this.audio.play('buy');
-    this.world.toast(`Mutation: ${TALENT_BY_ID[id].name}`, 2.5);
-    this.ui.refreshTree();
+    this.setState('play');
   }
 
   handleKeys() {
     const keys = this.input.consume();
     for (const k of keys) {
       if (this.state === 'play') {
-        if (k === ' ' || k === 'click') {
-          if (!this.world.player.dash()) this.audio.play('nope', 0.3);
-        } else if (k === 'e' || k === 'rclick') this.world.player.toggleAnchor();
-        else if (k === 'q') this.world.player.cyst();
-        else if (k === 't') this.setState('tree');
-        else if (k === 'p' || k === 'escape') this.setState('pause');
+        const p = this.world.player;
+        if (k === ' ' || k === 'rclick') {
+          if (!p.dash()) this.audio.play('nope', 0.3);
+        } else if (k === 'click') {
+          const w = this.cam.toWorld(this.input.mouse.x, this.input.mouse.y);
+          p.useAbility(w.x, w.y);
+        } else if (k === 'p' || k === 'escape') this.setState('pause');
         else if (k === 'm') this.audio.muted = !this.audio.muted;
-      } else if (this.state === 'tree') {
-        if (k === 't' || k === 'escape') this.setState('play');
+      } else if (this.state === 'levelup') {
+        if (k === '1' || k === '2' || k === '3') this.choose(Number(k) - 1);
       } else if (this.state === 'pause') {
-        if (k === 'p' || k === 'escape') this.setState('play');
+        if (k === 'p' || k === 'escape' || k === ' ') this.setState('play');
       } else if (this.state === 'menu' || this.state === 'end') {
         if (k === ' ' || k === 'enter') this.start();
       }
@@ -94,7 +94,7 @@ class Game {
 
   frame(now) {
     requestAnimationFrame((t) => this.frame(t));
-    let dt = Math.min(0.05, (now - this.last) / 1000);
+    const dt = Math.min(0.05, (now - this.last) / 1000);
     this.last = now;
     this.handleKeys();
     if (!this.world) return;
@@ -109,11 +109,11 @@ class Game {
         this.audio.play('win');
         this.setState('end');
         this.ui.showEnd(w, true);
-      }
+      } else if (w.pendingLevelUp) this.openLevelUp();
     }
     this.cam.follow(w.player, dt);
     this.renderer.draw(w, this.cam, this.state === 'play' ? dt : 0);
-    if (this.state === 'play' || this.state === 'tree' || this.state === 'pause') this.ui.updateHud(w);
+    if (this.state !== 'menu' && this.state !== 'end') this.ui.updateHud(w);
   }
 }
 

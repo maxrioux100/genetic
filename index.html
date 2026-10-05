@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-    <title>Genetic — evolve from a single cell</title>
+    <title>Genetic — eat, grow, evolve</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -11,61 +11,50 @@
 
     <!-- HUD -->
     <div id="hud" class="hidden">
-      <div class="bars">
-        <div class="bar">
-          <span class="lbl">Integrity</span>
-          <div class="track"><div id="hp" class="fill hp"></div></div>
+      <div class="top">
+        <div class="hpwrap">
+          <div class="lbl">HEALTH</div>
+          <div class="track big">
+            <div id="hp" class="fill hp"></div>
+            <span id="hp-text" class="bartext"></span>
+          </div>
         </div>
-        <div class="bar">
-          <span class="lbl">Energy</span>
-          <div class="track"><div id="energy" class="fill energy"></div></div>
+        <div class="xpwrap">
+          <div class="lvl"><span class="lvl-lbl">LEVEL</span><span id="level">0</span></div>
+          <div class="track xp"><div id="xp" class="fill xpfill"></div></div>
+          <div class="xpinfo"><span id="lineage"></span><span id="next"></span></div>
         </div>
-        <div class="bar">
-          <span class="lbl">Biomass</span>
-          <div class="track"><div id="biomass" class="fill biomass"></div></div>
-        </div>
+        <div id="forms" class="forms"></div>
       </div>
-      <div class="status">
-        <div id="era" class="era"></div>
-        <div id="level"></div>
-        <div id="mp" class="mp"></div>
+      <div id="bossbar" class="bossbar hidden">
+        <span id="bossname"></span>
+        <div class="track"><div id="bossfill" class="fill boss"></div></div>
       </div>
       <div id="abilities" class="abilities"></div>
       <div id="toasts"></div>
       <div id="banner" class="banner hidden"></div>
       <div id="hint" class="hint"></div>
+      <div class="legend"><i class="g"></i> food <i class="y"></i> rival <i class="r"></i> eats you</div>
     </div>
 
-    <!-- Talent tree -->
-    <div id="tree" class="overlay hidden">
-      <div class="tree-head">
-        <h2>Mutation</h2>
-        <div id="tree-mp"></div>
-        <div class="tree-help">
-          Pick a way of life. Points are scarce: you will not get everything. Click a node to mutate. <b>T</b> or <b>Esc</b> to return.
-        </div>
-        <button id="tree-close" class="btn btn-small">Return to the soup</button>
-      </div>
-      <div id="tree-canvas">
-        <svg id="tree-lines"></svg>
-        <div id="tree-nodes"></div>
-      </div>
-      <div id="tooltip" class="tooltip hidden"></div>
+    <!-- Level up -->
+    <div id="levelup" class="overlay screen hidden">
+      <h1 id="levelup-title">LEVEL UP</h1>
+      <p class="tag">Choose a mutation. Press 1, 2 or 3.</p>
+      <div id="cards" class="cards"></div>
     </div>
 
     <!-- Menu -->
     <div id="menu" class="overlay screen">
       <h1>GENETIC</h1>
-      <p class="tag">You are one cell in a hostile soup. Eat, divide, mutate, and become something.</p>
+      <p class="tag">Everything bigger eats you. Everything smaller is food. Grow until nothing is bigger.</p>
       <div class="controls">
-        <div><b>Move</b> mouse (cell follows cursor) or WASD</div>
-        <div><b>Burst</b> Space / click &nbsp;·&nbsp; <b>Anchor</b> E &nbsp;·&nbsp; <b>Cyst</b> Q</div>
-        <div><b>Mutation tree</b> T &nbsp;·&nbsp; <b>Pause</b> P &nbsp;·&nbsp; <b>Mute</b> M</div>
+        <div><b>Move</b> mouse or WASD</div>
+        <div><b>Dash</b> Space / right click &nbsp;·&nbsp; <b>Ability</b> left click</div>
+        <div><b>Pause</b> P &nbsp;·&nbsp; <b>Mute</b> M</div>
       </div>
-      <p class="small">
-        Every threat has a tell and a counter. Every talent branch is a way to live. The world watches how you play and pushes back on it.
-      </p>
-      <button id="start" class="btn">Begin as a cell</button>
+      <p class="small">Four forms. Serpent, Volt, Brood, Venom. Pick up to two and push them to their ultimate.</p>
+      <button id="start" class="btn">Enter the sea</button>
     </div>
 
     <!-- End -->
@@ -74,7 +63,7 @@
       <p id="end-sub" class="tag"></p>
       <div id="end-lineage" class="lineage"></div>
       <div id="end-stats" class="stats"></div>
-      <button id="restart" class="btn">Try another lineage</button>
+      <button id="restart" class="btn">Again</button>
     </div>
 
     <div id="pause" class="overlay screen hidden">

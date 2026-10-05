@@ -98,7 +98,7 @@ export class Input {
     const dead = player.r + 6;
     if (d < dead) return { x: 0, y: 0 };
     // speed scales with distance to cursor so slow (stealth) movement is possible
-    const f = Math.min(1, (d - dead) / 140);
+    const f = Math.min(1, (d - dead) / 50);
     return { x: (dx / d) * f, y: (dy / d) * f };
   }
 }
