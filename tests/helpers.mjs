@@ -1,6 +1,6 @@
 // Shared helpers for headless simulation tests. No DOM, no canvas, no audio.
 import { World } from '../src/world.js';
-import { TALENT_BY_ID, canBuy } from '../src/talents.js';
+import { drawCards } from '../src/perks.js';
 import { CFG } from '../src/config.js';
 
 /** Deterministic Math.random (mulberry32) so failures are reproducible. */
@@ -20,20 +20,22 @@ export function seedRandom(seed) {
 
 export const silentAudio = { play() {}, muted: true };
 
-/** A simple bot: flee the nearest threat, otherwise go to the nearest nutrient. */
+/** A simple bot: flee anything that can eat it, otherwise chase the nearest thing it can eat, else specks. */
 export function botInput(world) {
   return {
     moveDir(p) {
-      const n = world.nearestNutrient(p.x, p.y, 600);
-      const t = world.nearestThreat(p.x, p.y, 140, (x) => x.kind !== 'acid');
+      const danger = world.nearestCreature(p.x, p.y, 260, (c) => c.r > p.r * CFG.player.dangerRatio);
+      const food = world.nearestCreature(p.x, p.y, 500, (c) => c.r < p.r * CFG.player.eatRatio);
+      const speck = world.nearestSpeck(p.x, p.y, 600);
       let dx = 0,
         dy = 0;
-      if (t) {
-        dx = p.x - t.x;
-        dy = p.y - t.y;
-      } else if (n) {
-        dx = n.x - p.x;
-        dy = n.y - p.y;
+      const t = danger ? null : food || speck;
+      if (danger) {
+        dx = p.x - danger.x;
+        dy = p.y - danger.y;
+      } else if (t) {
+        dx = t.x - p.x;
+        dy = t.y - p.y;
       }
       const l = Math.hypot(dx, dy) || 1;
       return { x: dx / l, y: dy / l };
@@ -41,19 +43,28 @@ export function botInput(world) {
   };
 }
 
+/** Perk preference per build: the form ids to push, in order. */
 export const BUILDS = {
-  hunter: ['cilia', 'jaws', 'toxin', 'engulf', 'bloodlust', 'apex', 'flagellum', 'membrane'],
-  autotroph: ['chloroplast', 'vacuole', 'anchor', 'bloom', 'thickwall', 'reef', 'membrane', 'spikes'],
-  armor: ['membrane', 'shell', 'spikes', 'regen', 'cyst', 'juggernaut', 'flagellum'],
-  nimble: ['flagellum', 'sense', 'streamline', 'camo', 'mimicry', 'phantom', 'membrane'],
-  colony: ['mitosis', 'signal', 'symbiosis', 'swarm', 'sacrifice', 'hive', 'flagellum'],
+  serpent: ['serpent', 'tough'],
+  volt: ['volt', 'bite'],
+  brood: ['brood', 'quick'],
+  venom: ['venom', 'regen'],
+  mixed: ['volt', 'serpent'],
 };
+
+function chooseCard(cards, prefs) {
+  for (const pref of prefs) {
+    const c = cards.find((k) => k.form === pref || k.id === pref);
+    if (c) return c;
+  }
+  return cards[0];
+}
 
 /**
  * Simulate a run. Returns the world plus a list of invariant violations.
- * `forceLevelEvery` adds a full division's worth of biomass every N seconds so late eras are reached quickly.
+ * `forceLevelEvery` grants a full level's worth of xp every N seconds so late game is reached quickly.
  */
-export function simulate({ build = [], seconds = 60, forceLevelEvery = 0, dt = 1 / 60, seed = 1 } = {}) {
+export function simulate({ build = [], seconds = 60, forceLevelEvery = 0, dt = 1 / 60, seed = 1, useAbility = true } = {}) {
   const restore = seedRandom(seed);
   try {
     const world = new World(silentAudio);
@@ -62,37 +73,37 @@ export function simulate({ build = [], seconds = 60, forceLevelEvery = 0, dt = 1
     const violations = [];
     const seen = new Set();
     let dashT = 0,
-      anchored = false,
+      abilityT = 0,
       nextForce = forceLevelEvery;
     const frames = Math.floor(seconds / dt);
     for (let i = 0; i < frames; i++) {
-      for (const id of build) {
-        if (canBuy(id, p.talents, p.mp)) {
-          p.mp -= TALENT_BY_ID[id].cost;
-          p.learn(id);
-        }
+      if (world.pendingLevelUp) {
+        const cards = drawCards(p.perks, p.perkCounts, 3);
+        if (cards.length) p.takePerk(chooseCard(cards, build).id);
+        world.pendingLevelUp = false;
       }
       if (forceLevelEvery && world.time >= nextForce) {
         nextForce += forceLevelEvery;
-        p.biomass += CFG.levels.biomassNeed(p.level);
+        p.xp += CFG.levels.xpNeed(p.level);
       }
       if ((dashT -= dt) <= 0) {
         p.dash();
         dashT = 2;
       }
-      if (p.has('anchor') && !anchored && world.time > 20) {
-        p.toggleAnchor();
-        anchored = true;
+      if (useAbility && (abilityT -= dt) <= 0) {
+        const c = world.nearestCreature(p.x, p.y, 400);
+        if (c) p.useAbility(c.x, c.y);
+        abilityT = 1.5;
       }
-      if (p.has('cyst') && p.hp < p.maxHp * 0.4) p.cyst();
       world.update(dt, input);
-      for (const t of world.threats) seen.add(t.kind);
-      for (const k of ['x', 'y', 'hp', 'energy', 'biomass'])
-        if (!Number.isFinite(p[k])) violations.push(`player.${k} is ${p[k]} at t=${world.time}`);
+      for (const c of world.creatures) seen.add(c.arch);
+      for (const k of ['x', 'y', 'hp', 'xp']) if (!Number.isFinite(p[k])) violations.push(`player.${k} is ${p[k]} at t=${world.time}`);
       if (p.hp > p.maxHp + 1e-6) violations.push(`hp ${p.hp} above max ${p.maxHp}`);
-      if (p.energy > p.maxEnergy + 1e-6) violations.push(`energy ${p.energy} above max ${p.maxEnergy}`);
-      for (const t of world.threats)
-        if (!Number.isFinite(t.x) || !Number.isFinite(t.y)) violations.push(`${t.kind} position is not finite`);
+      for (const c of world.creatures) {
+        if (!Number.isFinite(c.x) || !Number.isFinite(c.y) || !Number.isFinite(c.r))
+          violations.push(`${c.arch} ${c.kind} has a non-finite field`);
+        if (c.r > p.r * 6) violations.push(`${c.arch} grew to ${c.r} vs player ${p.r}`);
+      }
       if (violations.length > 5 || p.dead || world.won) break;
     }
     return { world, player: p, violations, seen };
