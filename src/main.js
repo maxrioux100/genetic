@@ -12,6 +12,7 @@ class Game {
     this.cam = new Camera(this.canvas);
     this.input = new Input(this.canvas);
     this.input.camera = this.cam;
+    this.input.onKey = () => this.handleKeys();
     this.audio = new Audio();
     this.ui = new UI(this);
     this.state = 'menu';
@@ -43,6 +44,9 @@ class Game {
     this.state = s;
     this.ui.show(s === 'play' ? 'none' : s);
   }
+
+  /** Called by the tree's close button and backdrop. */
+  closeTree() { if (this.state === 'tree') this.setState('play'); }
 
   buy(id) {
     const p = this.world.player;

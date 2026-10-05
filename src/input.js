@@ -7,15 +7,28 @@ export class Input {
     this.mode = 'mouse'; // 'mouse' | 'keys'
     this.pressed = []; // one-shot key presses consumed by main
     this.camera = null; // set by main for screen->world
+    this.onKey = null; // set by main: called synchronously on every press so UI keys never depend on the frame loop
+    const keyName = (e) => {
+      let k = (e.key || '').toLowerCase();
+      if (k === 'esc') k = 'escape';
+      // fallback to the physical key when the layout reports something odd (dead keys, IME, 'unidentified')
+      if (k.length !== 1 && k !== 'escape' && !k.startsWith('arrow') && e.code) {
+        if (e.code.startsWith('Key')) k = e.code.slice(3).toLowerCase();
+        else if (e.code === 'Space') k = ' ';
+        else if (e.code === 'Escape') k = 'escape';
+      }
+      return k;
+    };
     window.addEventListener('keydown', (e) => {
       if (e.repeat) return;
-      const k = e.key.toLowerCase();
+      const k = keyName(e);
       this.keys.add(k);
       this.pressed.push(k);
       if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) this.mode = 'keys';
       if ([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) e.preventDefault();
+      this.onKey?.();
     });
-    window.addEventListener('keyup', (e) => this.keys.delete(e.key.toLowerCase()));
+    window.addEventListener('keyup', (e) => this.keys.delete(keyName(e)));
     canvas.addEventListener('mousemove', (e) => {
       this.mouse.x = e.clientX; this.mouse.y = e.clientY; this.mouse.inside = true;
       if (Math.hypot(e.movementX, e.movementY) > 2) this.mode = 'mouse';

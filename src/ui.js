@@ -18,6 +18,9 @@ export class UI {
     this.lastBanner = null;
     $('start').onclick = () => game.start();
     $('restart').onclick = () => game.start();
+    $('tree-close').onclick = () => game.closeTree();
+    // clicking the empty backdrop (not a node) also returns to the game
+    $('tree-canvas').addEventListener('click', (ev) => { if (ev.target === $('tree-canvas') || ev.target === $('tree-nodes') || ev.target === $('tree-lines')) game.closeTree(); });
     window.addEventListener('resize', () => { if (this.builtTree) this.layoutTree(); });
   }
 
