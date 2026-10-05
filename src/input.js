@@ -30,23 +30,59 @@ export class Input {
     });
     window.addEventListener('keyup', (e) => this.keys.delete(keyName(e)));
     canvas.addEventListener('mousemove', (e) => {
-      this.mouse.x = e.clientX; this.mouse.y = e.clientY; this.mouse.inside = true;
+      this.mouse.x = e.clientX;
+      this.mouse.y = e.clientY;
+      this.mouse.inside = true;
       if (Math.hypot(e.movementX, e.movementY) > 2) this.mode = 'mouse';
     });
     canvas.addEventListener('mouseleave', () => (this.mouse.inside = false));
-    canvas.addEventListener('mousedown', (e) => { if (e.button === 0) { this.mouse.down = true; this.pressed.push('click'); } if (e.button === 2) this.pressed.push('rclick'); });
+    canvas.addEventListener('mousedown', (e) => {
+      if (e.button === 0) {
+        this.mouse.down = true;
+        this.pressed.push('click');
+      }
+      if (e.button === 2) this.pressed.push('rclick');
+    });
     window.addEventListener('mouseup', () => (this.mouse.down = false));
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     // touch: drag to steer, tap = burst
-    canvas.addEventListener('touchstart', (e) => { const t = e.touches[0]; this.mouse.x = t.clientX; this.mouse.y = t.clientY; this.mouse.inside = true; this.mode = 'mouse'; this.touchT = performance.now(); e.preventDefault(); }, { passive: false });
-    canvas.addEventListener('touchmove', (e) => { const t = e.touches[0]; this.mouse.x = t.clientX; this.mouse.y = t.clientY; e.preventDefault(); }, { passive: false });
-    canvas.addEventListener('touchend', () => { if (performance.now() - this.touchT < 180) this.pressed.push('click'); });
+    canvas.addEventListener(
+      'touchstart',
+      (e) => {
+        const t = e.touches[0];
+        this.mouse.x = t.clientX;
+        this.mouse.y = t.clientY;
+        this.mouse.inside = true;
+        this.mode = 'mouse';
+        this.touchT = performance.now();
+        e.preventDefault();
+      },
+      { passive: false },
+    );
+    canvas.addEventListener(
+      'touchmove',
+      (e) => {
+        const t = e.touches[0];
+        this.mouse.x = t.clientX;
+        this.mouse.y = t.clientY;
+        e.preventDefault();
+      },
+      { passive: false },
+    );
+    canvas.addEventListener('touchend', () => {
+      if (performance.now() - this.touchT < 180) this.pressed.push('click');
+    });
   }
-  consume() { const p = this.pressed; this.pressed = []; return p; }
+  consume() {
+    const p = this.pressed;
+    this.pressed = [];
+    return p;
+  }
   /** Desired movement direction (unit vector or zero) for the player. */
   moveDir(player) {
     if (this.mode === 'keys') {
-      let x = 0, y = 0;
+      let x = 0,
+        y = 0;
       if (this.keys.has('w') || this.keys.has('arrowup')) y -= 1;
       if (this.keys.has('s') || this.keys.has('arrowdown')) y += 1;
       if (this.keys.has('a') || this.keys.has('arrowleft')) x -= 1;
@@ -56,7 +92,8 @@ export class Input {
     }
     if (!this.mouse.inside || !this.camera) return { x: 0, y: 0 };
     const w = this.camera.toWorld(this.mouse.x, this.mouse.y);
-    const dx = w.x - player.x, dy = w.y - player.y;
+    const dx = w.x - player.x,
+      dy = w.y - player.y;
     const d = Math.hypot(dx, dy);
     const dead = player.r + 6;
     if (d < dead) return { x: 0, y: 0 };

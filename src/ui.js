@@ -8,10 +8,25 @@ export class UI {
   constructor(game) {
     this.game = game;
     this.el = {
-      hud: $('hud'), hp: $('hp'), energy: $('energy'), biomass: $('biomass'), era: $('era'), level: $('level'), mp: $('mp'),
-      abilities: $('abilities'), toasts: $('toasts'), banner: $('banner'), hint: $('hint'),
-      tree: $('tree'), treeMp: $('tree-mp'), lines: $('tree-lines'), nodes: $('tree-nodes'), tooltip: $('tooltip'),
-      menu: $('menu'), end: $('end'), pause: $('pause'),
+      hud: $('hud'),
+      hp: $('hp'),
+      energy: $('energy'),
+      biomass: $('biomass'),
+      era: $('era'),
+      level: $('level'),
+      mp: $('mp'),
+      abilities: $('abilities'),
+      toasts: $('toasts'),
+      banner: $('banner'),
+      hint: $('hint'),
+      tree: $('tree'),
+      treeMp: $('tree-mp'),
+      lines: $('tree-lines'),
+      nodes: $('tree-nodes'),
+      tooltip: $('tooltip'),
+      menu: $('menu'),
+      end: $('end'),
+      pause: $('pause'),
     };
     this.pos = layoutTalents();
     this.builtTree = false;
@@ -20,19 +35,27 @@ export class UI {
     $('restart').onclick = () => game.start();
     $('tree-close').onclick = () => game.closeTree();
     // clicking the empty backdrop (not a node) also returns to the game
-    $('tree-canvas').addEventListener('click', (ev) => { if (ev.target === $('tree-canvas') || ev.target === $('tree-nodes') || ev.target === $('tree-lines')) game.closeTree(); });
-    window.addEventListener('resize', () => { if (this.builtTree) this.layoutTree(); });
+    $('tree-canvas').addEventListener('click', (ev) => {
+      if (ev.target === $('tree-canvas') || ev.target === $('tree-nodes') || ev.target === $('tree-lines')) game.closeTree();
+    });
+    window.addEventListener('resize', () => {
+      if (this.builtTree) this.layoutTree();
+    });
   }
 
   show(name) {
     for (const k of ['menu', 'end', 'pause', 'tree']) this.el[k].classList.toggle('hidden', k !== name);
     this.el.hud.classList.toggle('hidden', name === 'menu' || name === 'end');
-    if (name === 'tree') { if (!this.builtTree) this.buildTree(); this.refreshTree(); }
+    if (name === 'tree') {
+      if (!this.builtTree) this.buildTree();
+      this.refreshTree();
+    }
   }
 
   // ---------- HUD ----------
   updateHud(world) {
-    const p = world.player, e = this.el;
+    const p = world.player,
+      e = this.el;
     e.hp.style.width = `${(p.hp / p.maxHp) * 100}%`;
     e.hp.classList.toggle('low', p.hp < p.maxHp * 0.3);
     e.energy.style.width = `${(p.energy / p.maxEnergy) * 100}%`;
@@ -44,19 +67,40 @@ export class UI {
     e.mp.classList.toggle('ready', p.mp > 0);
     // abilities
     const abs = [];
-    if (p.canDash) abs.push({ key: 'Space', name: 'Burst', cd: p.dashCd / (CFG.player.dashCd * (p.has('streamline') ? 0.6 : 1)), off: p.energy < CFG.player.dashCost });
+    if (p.canDash)
+      abs.push({
+        key: 'Space',
+        name: 'Burst',
+        cd: p.dashCd / (CFG.player.dashCd * (p.has('streamline') ? 0.6 : 1)),
+        off: p.energy < CFG.player.dashCost,
+      });
     if (p.has('anchor')) abs.push({ key: 'E', name: 'Anchor', cd: 0, active: p.anchored });
-    if (p.has('cyst')) abs.push({ key: 'Q', name: 'Cyst', cd: p.cystCd / CFG.player.cystCd, active: p.cystT > 0, off: p.energy < CFG.player.cystCost });
+    if (p.has('cyst'))
+      abs.push({ key: 'Q', name: 'Cyst', cd: p.cystCd / CFG.player.cystCd, active: p.cystT > 0, off: p.energy < CFG.player.cystCost });
     if (p.has('mitosis')) abs.push({ key: '', name: 'Drones', val: `${p.drones.length}/${p.maxDrones}` });
-    const html = abs.map((a) => `<div class="ab ${a.active ? 'active' : ''} ${a.off ? 'off' : ''}"><b>${a.val ?? a.key}</b>${a.name}<div class="cd" style="height:${(a.cd || 0) * 100}%"></div></div>`).join('');
-    if (html !== this._abHtml) { e.abilities.innerHTML = html; this._abHtml = html; }
+    const html = abs
+      .map(
+        (a) =>
+          `<div class="ab ${a.active ? 'active' : ''} ${a.off ? 'off' : ''}"><b>${a.val ?? a.key}</b>${a.name}<div class="cd" style="height:${(a.cd || 0) * 100}%"></div></div>`,
+      )
+      .join('');
+    if (html !== this._abHtml) {
+      e.abilities.innerHTML = html;
+      this._abHtml = html;
+    }
     // toasts
     const th = world.toasts.map((t) => `<div class="toast ${t.kind}" style="opacity:${Math.min(1, t.t * 2)}">${t.msg}</div>`).join('');
-    if (th !== this._toastHtml) { e.toasts.innerHTML = th; this._toastHtml = th; }
+    if (th !== this._toastHtml) {
+      e.toasts.innerHTML = th;
+      this._toastHtml = th;
+    }
     // era banner
     if (world.eraBannerT > 0) {
       const key = world.eraIdx;
-      if (this.lastBanner !== key) { e.banner.innerHTML = `${world.era.name}<small>Era ${world.eraIdx + 1}</small>`; this.lastBanner = key; }
+      if (this.lastBanner !== key) {
+        e.banner.innerHTML = `${world.era.name}<small>Era ${world.eraIdx + 1}</small>`;
+        this.lastBanner = key;
+      }
       e.banner.classList.remove('hidden');
       e.banner.style.opacity = Math.min(1, world.eraBannerT);
     } else e.banner.classList.add('hidden');
@@ -65,9 +109,15 @@ export class UI {
     if (world.time < 12) hint = 'Eat the glowing specks. Your biomass bar fills, then you divide.';
     else if (p.mp > 0 && world.time < 40) hint = 'You have a mutation point. Press T and choose how you want to live.';
     else if (p.energy < p.maxEnergy * 0.25) hint = 'Energy low. Eat, or you will starve.';
-    else if (p.parasites.length) hint = p.canDash ? 'Parasite attached: Burst to shake it off.' : 'Parasites drain energy. Spikes, Cyst, Cell Wall or Burst deal with them.';
+    else if (p.parasites.length)
+      hint = p.canDash
+        ? 'Parasite attached: Burst to shake it off.'
+        : 'Parasites drain energy. Spikes, Cyst, Cell Wall or Burst deal with them.';
     else if (p.markedT > 0) hint = 'Marked. Antibodies know where you are.';
-    if (hint !== this._hint) { e.hint.textContent = hint; this._hint = hint; }
+    if (hint !== this._hint) {
+      e.hint.textContent = hint;
+      this._hint = hint;
+    }
   }
 
   // ---------- tree ----------
@@ -77,7 +127,10 @@ export class UI {
     e.nodes.appendChild(Object.assign(document.createElement('div'), { className: 'center', textContent: 'YOU' }));
     for (const [k, b] of Object.entries(BRANCHES)) {
       const lbl = document.createElement('div');
-      lbl.className = 'branch-label'; lbl.textContent = b.name; lbl.style.color = b.color; lbl.dataset.branch = k;
+      lbl.className = 'branch-label';
+      lbl.textContent = b.name;
+      lbl.style.color = b.color;
+      lbl.dataset.branch = k;
       e.nodes.appendChild(lbl);
     }
     for (const t of TALENTS) {
@@ -97,18 +150,21 @@ export class UI {
   }
   layoutTree() {
     const e = this.el;
-    const W = e.nodes.clientWidth, H = e.nodes.clientHeight;
+    const W = e.nodes.clientWidth,
+      H = e.nodes.clientHeight;
     const S = Math.min(W, H);
     const toPx = (p) => ({ x: W / 2 + (p.x - 0.5) * S, y: H / 2 + (p.y - 0.5) * S });
     for (const n of e.nodes.querySelectorAll('.node')) {
       const p = toPx(this.pos[n.dataset.id]);
-      n.style.left = `${p.x}px`; n.style.top = `${p.y}px`;
+      n.style.left = `${p.x}px`;
+      n.style.top = `${p.y}px`;
     }
     for (const l of e.nodes.querySelectorAll('.branch-label')) {
       const b = BRANCHES[l.dataset.branch];
       const a = (b.angle * Math.PI) / 180;
       const p = toPx({ x: 0.5 + Math.cos(a) * 0.468, y: 0.5 + Math.sin(a) * 0.468 });
-      l.style.left = `${p.x}px`; l.style.top = `${p.y}px`;
+      l.style.left = `${p.x}px`;
+      l.style.top = `${p.y}px`;
     }
     // lines
     let svg = '';
@@ -123,7 +179,8 @@ export class UI {
     e.lines.innerHTML = svg;
   }
   refreshTree() {
-    const p = this.game.world.player, e = this.el;
+    const p = this.game.world.player,
+      e = this.el;
     e.treeMp.textContent = `${p.mp} point${p.mp === 1 ? '' : 's'} available`;
     for (const n of e.nodes.querySelectorAll('.node')) {
       const id = n.dataset.id;
@@ -138,17 +195,28 @@ export class UI {
     }
   }
   tooltip(t, ev) {
-    const p = this.game.world.player, e = this.el;
-    const req = t.req.length ? `Requires ${t.anyReq ? 'one of' : ''}: ${t.req.map((r) => TALENT_BY_ID[r].name).join(', ')}` : 'No requirement';
-    const state = p.talents.has(t.id) ? 'Acquired' : canBuy(t.id, p.talents, p.mp) ? 'Click to mutate' : p.mp < t.cost ? 'Not enough points' : 'Locked';
+    const p = this.game.world.player,
+      e = this.el;
+    const req = t.req.length
+      ? `Requires ${t.anyReq ? 'one of' : ''}: ${t.req.map((r) => TALENT_BY_ID[r].name).join(', ')}`
+      : 'No requirement';
+    const state = p.talents.has(t.id)
+      ? 'Acquired'
+      : canBuy(t.id, p.talents, p.mp)
+        ? 'Click to mutate'
+        : p.mp < t.cost
+          ? 'Not enough points'
+          : 'Locked';
     e.tooltip.innerHTML = `<h4 style="color:${BRANCHES[t.branch].color}">${t.name} <span style="color:#ffd27a">· ${t.cost} pt</span></h4>${t.desc}<div class="req">${req} · ${state}</div>`;
     e.tooltip.classList.remove('hidden');
     this.moveTooltip(ev);
   }
   moveTooltip(ev) {
     const e = this.el.tooltip;
-    const x = Math.min(ev.clientX + 16, window.innerWidth - 320), y = Math.min(ev.clientY + 16, window.innerHeight - 160);
-    e.style.left = `${x}px`; e.style.top = `${y}px`;
+    const x = Math.min(ev.clientX + 16, window.innerWidth - 320),
+      y = Math.min(ev.clientY + 16, window.innerHeight - 160);
+    e.style.left = `${x}px`;
+    e.style.top = `${y}px`;
   }
 
   // ---------- end ----------
@@ -161,8 +229,13 @@ export class UI {
     $('end-lineage').textContent = `Lineage: ${lineageName(p.talents)}`;
     const s = p.stats;
     const rows = [
-      ['Survived', fmtTime(world.time)], ['Divisions', p.level], ['Nutrients eaten', s.nutrients], ['Cells eaten', s.eaten], ['Kills', s.kills],
-      ['Lunges survived', s.dodges], ['Damage taken', Math.round(s.damageTaken)],
+      ['Survived', fmtTime(world.time)],
+      ['Divisions', p.level],
+      ['Nutrients eaten', s.nutrients],
+      ['Cells eaten', s.eaten],
+      ['Kills', s.kills],
+      ['Lunges survived', s.dodges],
+      ['Damage taken', Math.round(s.damageTaken)],
       ['Mutations', [...p.talents].map((id) => TALENT_BY_ID[id].name).join(', ') || 'none'],
       ['World adaptations', world.director.adaptations.join('; ') || 'none'],
     ];
